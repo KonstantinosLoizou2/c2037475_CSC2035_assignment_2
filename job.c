@@ -74,9 +74,8 @@ job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
         else{
             strncpy(job->label,label,MAX_NAME_SIZE-1);
         }
-
-
     }
+    return job;
 }
 
 /*
@@ -86,7 +85,18 @@ job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
  *      and the documentation in job.h for when to do dynamic allocation
  */
 char* job_to_str(job_t* job, char* str) {
-    return NULL;
+    if (job == NULL|| strlen(job->label)!=(MAX_NAME_SIZE-1)){
+        return NULL;
+    }
+    if (str==NULL){
+        (char*)malloc(JOB_STR_SIZE);
+        return NULL;
+    }
+    snprintf(str, JOB_STR_SIZE,JOB_STR_FMT, (int)job->pid,job->id,job->priority,job->label);
+    return str;
+
+
+
 }
 
 /*
@@ -95,7 +105,23 @@ char* job_to_str(job_t* job, char* str) {
  * - see the hint for job_to_str
  */
 job_t* str_to_job(char* str, job_t* job) {
-    return NULL;
+    int pid;
+    unsigned int id,priority;
+    char label[MAX_NAME_SIZE];
+
+    if (job==NULL){
+        job = (job_t*)malloc(sizeof(job_t));
+    }
+    if (str==NULL||strlen(str)!=(JOB_STR_SIZE - 1)) {
+        free(job);
+        return NULL;
+    }
+    int read_string = sscanf(str,JOB_STR_FMT,&pid,&id,&priority,label);
+    if (read_string != 4) { //maybe delete it?
+        return NULL;
+    }
+    job_set(job,pid,id,priority,label);
+    return job;
 }
 
 /* 
