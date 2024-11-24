@@ -34,14 +34,25 @@ job_t* job_copy(job_t* src, job_t* dst) {
  * TODO: you must implement this function
  */
 void job_init(job_t* job) {
-    return;
+    if (job != NULL){
+        job->pid = 0;
+        job->id = 0;
+        job->priority = 0;
+        memcpy(job->label,PAD_STRING,MAX_NAME_SIZE-1);
+    }
 }
 
 /* 
  * TODO: you must implement this function
  */
 bool job_is_equal(job_t* j1, job_t* j2) {
-    return false;
+    if (j1->pid == j2->pid && j1->id == j2->id &&
+    j1->priority == j2->priority && strcmp(j1->label,j2->label)  == 0){
+        return true;
+    } else{
+        return false;
+    }
+
 }
 
 /*
@@ -52,7 +63,20 @@ bool job_is_equal(job_t* j1, job_t* j2) {
  */
 job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
     const char* label) {
-    return job;
+    if (job == NULL) {
+        return NULL;
+    }else{
+        job->pid = pid;
+        job->id = id;
+        job->priority = priority;
+        if (label == NULL || strlen(label) == 0 )
+            memcpy(job->label,PAD_STRING,MAX_NAME_SIZE-1);
+        else{
+            strncpy(job->label,label,MAX_NAME_SIZE-1);
+        }
+
+
+    }
 }
 
 /*
