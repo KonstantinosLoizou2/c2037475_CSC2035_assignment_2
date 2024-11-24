@@ -24,6 +24,7 @@ job_t* job_copy(job_t* src, job_t* dst) {
         dst->id = 0;
         dst->priority = 0;
         memcpy(dst->label,PAD_STRING,MAX_NAME_SIZE-1);
+        return dst; //should return source or dst/ original is src
     }else{
         return 0;
     }
