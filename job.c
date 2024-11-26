@@ -1,6 +1,6 @@
 /*
  * Replace the following string of 0s with your student number
- * 000000000
+ * 220374752
  */
 #include <stdlib.h>
 #include <string.h>
@@ -19,15 +19,30 @@ job_t* job_new(pid_t pid, unsigned int id, unsigned int priority,
  * TODO: you must implement this function
  */
 job_t* job_copy(job_t* src, job_t* dst) {
-    if (src != NULL){
-        dst->pid = 0;
-        dst->id = 0;
-        dst->priority = 0;
-        memcpy(dst->label,PAD_STRING,MAX_NAME_SIZE-1);
-        return dst; //should return source or dst/ original is src
-    }else{
-        return 0;
+    if (src == NULL){
+        errno = EINVAL;
+        return NULL;
     }
+    if (src == dst)
+        return dst;
+    if (strlen(src->label) != (MAX_NAME_SIZE-1)){
+        errno =EINVAL;
+        return NULL;
+    }
+    if (dst == NULL) {
+        dst = (job_t *) malloc(sizeof(job_t));//enonem
+        dst->pid = src->pid;
+        dst->id = src->id;
+        dst->priority = src->priority;
+        strncpy(dst->label, src->label, MAX_NAME_SIZE - 1);
+        return dst;
+    }
+
+    dst->pid = src->pid;
+    dst->id = src->id;
+    dst->priority = src->priority;
+    strncpy(dst->label, src->label, MAX_NAME_SIZE - 1);
+    return dst;
 }
 
 /* 
@@ -38,7 +53,10 @@ void job_init(job_t* job) {
         job->pid = 0;
         job->id = 0;
         job->priority = 0;
-        memcpy(job->label,PAD_STRING,MAX_NAME_SIZE-1);
+        strncpy(job->label,PAD_STRING, MAX_NAME_SIZE-1);
+        job->label[MAX_NAME_SIZE-1] = '\0';
+    }else{
+        return;
     }
 }
 
@@ -46,12 +64,17 @@ void job_init(job_t* job) {
  * TODO: you must implement this function
  */
 bool job_is_equal(job_t* j1, job_t* j2) {
+    if (j1 == NULL && j2 == NULL){
+        return true;
+    }
+    if (j1 == NULL || j2 == NULL){
+        return false;
+    }
     if (j1->pid == j2->pid && j1->id == j2->id &&
     j1->priority == j2->priority && strcmp(j1->label,j2->label)  == 0){
         return true;
-    } else{
-        return false;
     }
+    return false;
 
 }
 
@@ -64,16 +87,19 @@ bool job_is_equal(job_t* j1, job_t* j2) {
 job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
     const char* label) {
     if (job == NULL) {
+        errno = EINVAL;
         return NULL;
-    }else{
-        job->pid = pid;
-        job->id = id;
-        job->priority = priority;
-        if (label == NULL || strlen(label) == 0 )
-            memcpy(job->label,PAD_STRING,MAX_NAME_SIZE-1);
-        else{
-            strncpy(job->label,label,MAX_NAME_SIZE-1);
-        }
+    }
+    if (job->pid == pid && job->id == id && job->priority == priority && strcmp(job->label,label)==0){
+        return job;
+    }
+    job->pid = pid;
+    job->id = id;
+    job->priority = priority;
+    if (label == NULL || strlen(label) == 0 )
+        memcpy(job->label,PAD_STRING,MAX_NAME_SIZE-1);
+    else{
+        strncpy(job->label,label,MAX_NAME_SIZE-1);
     }
     return job;
 }
@@ -86,11 +112,16 @@ job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
  */
 char* job_to_str(job_t* job, char* str) {
     if (job == NULL|| strlen(job->label)!=(MAX_NAME_SIZE-1)){
+        errno = EINVAL;
         return NULL;
     }
     if (str==NULL){
-        (char*)malloc(JOB_STR_SIZE);
-        return NULL;
+        str =(char*)malloc(JOB_STR_SIZE);
+        if (str == NULL) {
+            errno = ENOMEM;
+            return NULL;
+        }
+        return str;
     }
     snprintf(str, JOB_STR_SIZE,JOB_STR_FMT, (int)job->pid,job->id,job->priority,job->label);
     return str;
@@ -111,16 +142,26 @@ job_t* str_to_job(char* str, job_t* job) {
 
     if (job==NULL){
         job = (job_t*)malloc(sizeof(job_t));
+        if(job==NULL){
+            errno = ENOMEM;
+            return NULL;
+        }
     }
     if (str==NULL||strlen(str)!=(JOB_STR_SIZE - 1)) {
         free(job);
+        errno = EINVAL;
         return NULL;
     }
     int read_string = sscanf(str,JOB_STR_FMT,&pid,&id,&priority,label);
     if (read_string != 4) { //maybe delete it?
+        errno = EINVAL;
         return NULL;
     }
     job_set(job,pid,id,priority,label);
+    if(strlen(job->label) !=(MAX_NAME_SIZE-1)){
+        errno = EINVAL;
+        return NULL;
+    }
     return job;
 }
 
