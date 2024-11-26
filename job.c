@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "job.h"
+#include <errno.h>
 
 /* 
  * DO NOT EDIT the job_new function.
@@ -96,12 +97,21 @@ job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
     job->pid = pid;
     job->id = id;
     job->priority = priority;
-    if (label == NULL || strlen(label) == 0 )
-        memcpy(job->label,PAD_STRING,MAX_NAME_SIZE-1);
-    else{
+    if (label == NULL || strlen(label) == 0 ){
+        strncpy(job->label,PAD_STRING,MAX_NAME_SIZE-1);
+        job->label[MAX_NAME_SIZE-1] = '\0';
+    }else{
         strncpy(job->label,label,MAX_NAME_SIZE-1);
+        job->label[MAX_NAME_SIZE-1] = '\0';
+    }
+    if (strlen(job->label)< MAX_NAME_SIZE){
+        memset((job->label)+ strlen(job->label),'*',(MAX_NAME_SIZE-1)-strlen(job->label));
+        job->label[MAX_NAME_SIZE-1] = '\0';
     }
     return job;
+
+
+
 }
 
 /*
@@ -121,7 +131,6 @@ char* job_to_str(job_t* job, char* str) {
             errno = ENOMEM;
             return NULL;
         }
-        return str;
     }
     snprintf(str, JOB_STR_SIZE,JOB_STR_FMT, (int)job->pid,job->id,job->priority,job->label);
     return str;
