@@ -69,6 +69,39 @@ int joblog_init(proc_t* proc) {
  * - see job.h for a function to create a job from its string representation
  */
 job_t* joblog_read(proc_t* proc, int entry_num, job_t* job) {
+    if (!proc||entry_num<0){
+        return NULL;
+    }
+    char * file_name = new_log_name(proc);
+    if (file_name == NULL){
+        errno=EINVAL; //possibly enomem
+    }
+
+    FILE* log_file;
+    int line_num = 0;
+    log_file = fopen(file_name, "r");
+    if(!log_file){
+        errno = ENOENT; //no such file errno
+        return NULL;
+    }
+    char buffer[JOB_STR_SIZE];
+    while (fgets(buffer, sizeof(buffer), log_file) != NULL) {
+        if (line_num == entry_num){
+            if (job == NULL){
+                job = (job_t*)malloc(sizeof(job_t));
+                if (job ==NULL){
+                    errno = ENOMEM;
+                    fclose(log_file);
+                    return NULL;
+                }
+            }
+            fclose(log_file);
+            str_to_job(buffer,job);
+            return job;
+        }
+        line_num++;
+    }
+    fclose(log_file); // posibly save ernno and assign
     return NULL;
 }
 
